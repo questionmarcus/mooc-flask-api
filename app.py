@@ -1,11 +1,11 @@
-from flask import Flask, jsonify, make_response
+from flask import Flask, jsonify, make_response, url_for
+import os
 import json
 import numpy as np
 
 app = Flask(__name__)
 
-with open("data/logdata.json", "r") as f1:
-    data = json.loads(f1.readlines()[0])
+logData2016 = json.load(open("static/2016-MOOC-UserSessions.json","r"))
 
 @app.route('/')
 def index():
@@ -14,15 +14,14 @@ def index():
 @app.route('/histogram')
 def hist():
     nCodeLines = []
-    for user in data:
-        nCodeLines.append(len(data[user]))
+    for user in logData2016:
+        nCodeLines.append(len(logData2016[user]))
     upperLimit = np.max(nCodeLines)
     upperLimitNearestTen = np.ceil(upperLimit/10).astype(int)*10
     hist = np.histogram(nCodeLines, np.arange(0,upperLimitNearestTen,10))
     resp = make_response(jsonify({"data":hist[0].tolist(), "bins":hist[1].tolist()}))
     resp.headers['Access-Control-Allow-Origin'] = '*'
     return resp
-    
 
 if __name__ == "__main__":
     app.run();
