@@ -24,8 +24,12 @@ def hist(year):
     else:
         return make_response(("Invalid year entry",404))
     upperLimit = np.max(nCodeLines)
-    upperLimitNearestTen = np.ceil(upperLimit/10).astype(int)*10
-    hist = np.histogram(nCodeLines, np.arange(0,upperLimitNearestTen,10))
+    if upperLimit > 500:
+        upperLimitNearestTwenty = np.ceil(upperLimit/20).astype(int)*20
+        hist = np.histogram(nCodeLines, np.arange(0,upperLimitNearestTwenty,20))
+    else:
+        upperLimitNearestTen = np.ceil(upperLimit/10).astype(int)*10
+        hist = np.histogram(nCodeLines, np.arange(0,upperLimitNearestTen,10))
     resp = make_response(jsonify({"data":hist[0].tolist(), "bins":hist[1].tolist()}))
     resp.headers['Access-Control-Allow-Origin'] = '*'
     return resp
@@ -52,22 +56,25 @@ def userPath(year):
     else:
         return make_response("Invalid year entry", 404)
     out = {"nodes":[
-            {"node":0, "name": "Tutorial11"},
-            {"node":1, "name": "Tutorial12"},
-            {"node":2, "name": "Tutorial2"},
-            {"node":3, "name": "Tutorial22"},
-            {"node":4, "name": "Tutorial23"},
-            {"node":5, "name": "Tutorial31"},
-            {"node":6, "name": "Tutorial32"}
+            {"name": "Tutorial11"},
+            {"name": "Tutorial12"},
+            {"name": "Tutorial2"},
+            {"name": "Tutorial22"},
+            {"name": "Tutorial23"},
+            {"name": "Tutorial31"},
+            {"name": "Tutorial32"}
         ], "links":[]}
     nodeDic = {"tutorial11":0, "tutorial12":1, "tutorial2":2,
             "tutorial22":3, "tutorial23":4, "tutorial31":5, "tutorial32":6}
     for sourceTarget, val in count.items():
-        out["links"].append({
-            "source":nodeDic[sourceTarget[0]],
-            "target":nodeDic[sourceTarget[1]],
-            "value":val})
-    return jsonify(out)
+        if sourceTarget[0] < sourceTarget[1]:
+            out["links"].append({
+                "source":nodeDic[sourceTarget[0]],
+                "target":nodeDic[sourceTarget[1]],
+                "value":val})
+    resp = make_response(jsonify(out))
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
 
 if __name__ == "__main__":
     app.run();
