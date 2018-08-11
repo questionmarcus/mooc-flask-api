@@ -12,13 +12,18 @@ logData2017 = json.load(open("static/2017-MOOC-logdata.json", "r"))
 def index():
     return "Welome to the Glasgow Haskell MOOC statistics server"
 
-@app.route('/histogram/<int:year>')
+@app.route('/histogram/<year>')
 def hist(year):
     nCodeLines = []
-    if year == 2016:
+    if year == "2016":
         for user in logData2016:
             nCodeLines.append(len(logData2016[user]))
-    elif year == 2017:
+    elif year == "2017":
+        for user in logData2017:
+            nCodeLines.append(len(logData2017[user]))
+    elif year == "All":
+        for user in logData2016:
+            nCodeLines.append(len(logData2016[user]))
         for user in logData2017:
             nCodeLines.append(len(logData2017[user]))
     else:
@@ -34,7 +39,7 @@ def hist(year):
     resp.headers['Access-Control-Allow-Origin'] = '*'
     return resp
 
-@app.route('/studypath/<int:year>')
+@app.route('/studypath/<year>')
 def userPath(year):
     count = Counter()
     def pathCount(user):
@@ -47,10 +52,15 @@ def userPath(year):
                     path.append((prev,tut))
                     prev = tut
             return path
-    if year == 2016:
+    if year == "2016":
         for user in logData2016:
             count.update(pathCount(logData2016[user]))
-    elif year == 2017:
+    elif year == "2017":
+        for user in logData2017:
+            count.update(pathCount(logData2017[user]))
+    elif year == "All":
+        for user in logData2016:
+            count.update(pathCount(logData2016[user]))
         for user in logData2017:
             count.update(pathCount(logData2017[user]))
     else:
@@ -73,6 +83,43 @@ def userPath(year):
                 "target":nodeDic[sourceTarget[1]],
                 "value":val})
     resp = make_response(jsonify(out))
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
+
+@app.route("/timeline/<year>")
+def timeline(year):
+    timestamps = []
+    if year == "2016":
+        for user in logData2016:
+            temp = []
+            for obj in logData2016[user]:
+                temp.append(obj["timestamp"][:10])
+            timestamps.extend(set(temp))
+    elif year == "2017":
+        for user in logData2017:
+            temp = []
+            for obj in logData2017[user]:
+                temp.append(obj["timestamp"][:10])
+            timestamps.extend(set(temp))
+    elif year == "All":
+        for user in logData2016:
+            temp = []
+            for obj in logData2016[user]:
+                temp.append(obj["timestamp"][:10])
+            timestamps.extend(set(temp))
+        for user in logData2017:
+            temp = []
+            for obj in logData2017[user]:
+                temp.append(obj["timestamp"][:10])
+            timestamps.extend(set(temp))
+    else:
+        return make_response("Invalid year entry", 404)
+    counts = Counter(timestamps)
+    output = []
+    for (d,val) in counts.items():
+        output.append({"date":d,"value":val})
+
+    resp = make_response(jsonify(output))
     resp.headers['Access-Control-Allow-Origin'] = '*'
     return resp
 
