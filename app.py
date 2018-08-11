@@ -1,12 +1,20 @@
 from flask import Flask, jsonify, make_response, url_for
 import json
+import os
 import numpy as np
 from collections import Counter
 
 app = Flask(__name__)
 
-logData2016 = json.load(open("static/2016-MOOC-logdata.json","r"))
-logData2017 = json.load(open("static/2017-MOOC-logdata.json", "r"))
+proj_dir = os.path.realpath(os.path.dirname(__name__))
+
+log2016path = os.path.join(proj_dir, "static", "2016-MOOC-logdata.json")
+log2017path = os.path.join(proj_dir, "static", "2017-MOOC-logdata.json")
+sessions2016path = os.path.join(proj_dir, "static", "2016-MOOC-UserSessions.json")
+sessions2017path = os.path.join(proj_dir, "static", "2017-MOOC-UserSessions.json")
+
+logData2016 = json.load(open(log2016path,"r"))
+logData2017 = json.load(open(log2017path, "r"))
 
 @app.route('/')
 def index():
