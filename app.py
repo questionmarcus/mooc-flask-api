@@ -169,5 +169,54 @@ def timeline(year):
     resp.headers['Access-Control-Allow-Origin'] = '*'
     return resp
 
+@app.route("/tutorialcompletion/<year>")
+def completion(year):
+    allTutorials = set(["tutorial11","tutorial12","tutorial2",
+        "tutorial22","tutorial23","tutorial31","tutorial32"])
+    count = Counter()
+    if year == "2016":
+        for user in logData2016:
+            accessed = set(
+                [x["exercise"]["tutorial"] for x in logData2016[user] if x["exercise"] != None]
+                )
+            if accessed == allTutorials:
+                accessed.add("All")
+            count.update(accessed)
+        numUsers = len(logData2016)
+    elif year == "2017":
+        for user in logData2017:
+            accessed = set(
+                [x["exercise"]["tutorial"] for x in logData2017[user] if x["exercise"] != None]
+                    )
+            if accessed == allTutorials:
+                accessed.add("All")
+            count.update(accessed)
+        numUsers = len(logData2017)
+    elif year == "All":
+        for user in logData2016:
+            accessed = set(
+                [x["exercise"]["tutorial"] for x in logData2016[user] if x["exercise"] != None]
+                    )
+            if accessed == allTutorials:
+                accessed.add("All")
+            count.update(accessed)
+        for user in logData2017:
+            accessed = set(
+                [x["exercise"]["tutorial"] for x in logData2017[user] if x["exercise"] != None]
+                    )
+            if accessed == allTutorials:
+                accessed.add("All")
+            count.update(accessed)
+        numUsers = len(logData2016) + len(logData2017)
+    else:
+        return make_response(("Invalid year entry",404))
+    output = {}
+    countArr = [{"name":x[0], "num_accessed":x[1]} for x in count.items()]
+    output["tutorial_numbers"] = countArr
+    output["total_users"] = numUsers
+    resp = make_response(jsonify(output))
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
+
 if __name__ == "__main__":
     app.run();
