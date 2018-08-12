@@ -16,6 +16,17 @@ sessions2017path = os.path.join(proj_dir, "mooc-flask-api","static", "2017-MOOC-
 logData2016 = json.load(open(log2016path,"r"))
 logData2017 = json.load(open(log2017path, "r"))
 
+def pathCount(user):
+    nonesRemoved = [x["exercise"]["tutorial"] for x in user if x["exercise"] != None]
+    if len(nonesRemoved) != 0:
+        path = []
+        prev = nonesRemoved[0]
+        for tut in nonesRemoved[1:]:
+            if tut != prev:
+                path.append((prev,tut))
+                prev = tut
+        return path
+
 @app.route('/')
 def index():
     return "Welome to the Glasgow Haskell MOOC statistics server"
@@ -50,16 +61,6 @@ def hist(year):
 @app.route('/studypath/<year>')
 def userPath(year):
     count = Counter()
-    def pathCount(user):
-        nonesRemoved = [x["exercise"]["tutorial"] for x in user if x["exercise"] != None]
-        if len(nonesRemoved) != 0:
-            path = []
-            prev = nonesRemoved[0]
-            for tut in nonesRemoved[1:]:
-                if tut != prev:
-                    path.append((prev,tut))
-                    prev = tut
-            return path
     if year == "2016":
         for user in logData2016:
             count.update(pathCount(logData2016[user]))
@@ -86,6 +87,43 @@ def userPath(year):
             "tutorial22":3, "tutorial23":4, "tutorial31":5, "tutorial32":6}
     for sourceTarget, val in count.items():
         if sourceTarget[0] < sourceTarget[1]:
+            out["links"].append({
+                "source":nodeDic[sourceTarget[0]],
+                "target":nodeDic[sourceTarget[1]],
+                "value":val})
+    resp = make_response(jsonify(out))
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
+
+@app.route('/studypath/<year>/reverse')
+def userReversePath(year):
+    count = Counter()
+    if year == "2016":
+        for user in logData2016:
+            count.update(pathCount(logData2016[user]))
+    elif year == "2017":
+        for user in logData2017:
+            count.update(pathCount(logData2017[user]))
+    elif year == "All":
+        for user in logData2016:
+            count.update(pathCount(logData2016[user]))
+        for user in logData2017:
+            count.update(pathCount(logData2017[user]))
+    else:
+        return make_response("Invalid year entry", 404)
+    out = {"nodes":[
+            {"name": "Tutorial11"},
+            {"name": "Tutorial12"},
+            {"name": "Tutorial2"},
+            {"name": "Tutorial22"},
+            {"name": "Tutorial23"},
+            {"name": "Tutorial31"},
+            {"name": "Tutorial32"}
+        ], "links":[]}
+    nodeDic = {"tutorial11":0, "tutorial12":1, "tutorial2":2,
+            "tutorial22":3, "tutorial23":4, "tutorial31":5, "tutorial32":6}
+    for sourceTarget, val in count.items():
+        if sourceTarget[0] > sourceTarget[1]:
             out["links"].append({
                 "source":nodeDic[sourceTarget[0]],
                 "target":nodeDic[sourceTarget[1]],
